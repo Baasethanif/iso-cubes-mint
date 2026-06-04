@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ISO CUBES — Mint</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --gold:#fde68a;--gold2:#d97706;--azure:#0ea5e9;--void:#9333ea;
+  --bg:#030008;--bg2:#0a0818;--border:rgba(253,230,138,0.15);
+  --text:rgba(255,255,255,0.85);--muted:rgba(255,255,255,0.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden;}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.4;}
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0;border-bottom:0.5px solid var(--border);}
+.nav-logo{font-family:'Cinzel',serif;font-size:18px;font-weight:700;background:linear-gradient(90deg,var(--gold),var(--azure));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;}
+.nav-links{display:flex;gap:24px;align-items:center;}
+.nav-links a{color:var(--muted);font-size:11px;text-decoration:none;letter-spacing:1.5px;text-transform:uppercase;transition:color 0.2s;}
+.nav-links a:hover{color:var(--gold);}
+.hero{text-align:center;padding:80px 0 60px;}
+.hero-eyebrow{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
+.hero-title{font-family:'Cinzel',serif;font-size:clamp(48px,8vw,96px);font-weight:700;line-height:0.95;letter-spacing:6px;background:linear-gradient(135deg,var(--gold) 0%,#fff 40%,var(--azure) 70%,var(--void) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px;}
+.hero-sub{font-size:13px;color:var(--muted);letter-spacing:2px;max-width:420px;margin:0 auto 48px;line-height:1.8;}
+.preview-row{display:flex;justify-content:center;gap:16px;margin-bottom:60px;flex-wrap:wrap;}
+.cube-preview{width:120px;height:120px;background:#0a0818;border:0.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;animation:float 3s ease-in-out infinite;}
+.cube-preview:nth-child(2){animation-delay:0.4s;}.cube-preview:nth-child(3){animation-delay:0.8s;}.cube-preview:nth-child(4){animation-delay:1.2s;}.cube-preview:nth-child(5){animation-delay:1.6s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:0.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:48px;}
+.stat{background:var(--bg2);padding:20px;text-align:center;}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;font-weight:600;color:var(--gold);display:block;margin-bottom:4px;}
+.stat-key{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.mint-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:40px;margin-bottom:48px;position:relative;overflow:hidden;}
+.mint-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--azure),transparent);}
+.mint-card-title{font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:32px;}
+.qty-row{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.qty-label{font-size:11px;color:var(--muted);letter-spacing:2px;flex:1;}
+.qty-controls{display:flex;align-items:center;}
+.qty-btn{width:40px;height:40px;background:rgba(255,255,255,0.05);border:0.5px solid var(--border);color:var(--gold);font-size:18px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.qty-btn:first-child{border-radius:8px 0 0 8px;}.qty-btn:last-child{border-radius:0 8px 8px 0;}
+.qty-btn:hover{background:rgba(253,230,138,0.1);}
+.qty-num{width:56px;height:40px;background:rgba(0,0,0,0.3);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);border-left:none;border-right:none;color:#fff;font-size:16px;font-family:'Share Tech Mono',monospace;text-align:center;outline:none;}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);margin-bottom:28px;}
+.price-label{font-size:11px;color:var(--muted);letter-spacing:2px;}
+.price-val{font-family:'Cinzel',serif;font-size:20px;color:var(--gold);}
+.price-usd{font-size:10px;color:var(--muted);margin-top:2px;text-align:right;}
+
+/* ── WALLET BUTTONS ── */
+.wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.wallet-btn{
+  height:52px;background:rgba(255,255,255,0.04);
+  border:0.5px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;
+  font-size:12px;letter-spacing:1px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all 0.2s;
+}
+.wallet-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(253,230,138,0.3);}
+.wallet-btn img{width:22px;height:22px;border-radius:4px;}
+.wallet-btn-wc{grid-column:1/-1;border-color:rgba(56,189,248,0.3);color:var(--azure);}
+.wallet-btn-wc:hover{background:rgba(56,189,248,0.08);border-color:var(--azure);}
+
+.mint-btn{width:100%;height:56px;background:linear-gradient(135deg,var(--gold2),var(--gold));border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:14px;font-weight:600;letter-spacing:3px;color:#000;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.mint-btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(253,230,138,0.25);}
+.mint-btn:active{transform:translateY(0);}
+.mint-btn:disabled{background:rgba(255,255,255,0.08);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
+.mint-btn.loading::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);animation:shimmer 1.2s infinite;}
+@keyframes shimmer{to{left:100%;}}
+.status{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:1px;display:none;}
+.status.show{display:block;}
+.status.success{background:rgba(74,222,128,0.1);border:0.5px solid rgba(74,222,128,0.3);color:#4ade80;}
+.status.error{background:rgba(248,113,113,0.1);border:0.5px solid rgba(248,113,113,0.3);color:#f87171;}
+.status.pending{background:rgba(253,230,138,0.1);border:0.5px solid rgba(253,230,138,0.3);color:var(--gold);}
+.wallet-info{display:none;font-size:11px;color:var(--muted);margin-bottom:20px;letter-spacing:1px;}
+.wallet-info.show{display:flex;justify-content:space-between;align-items:center;}
+.wallet-addr{color:var(--azure);}
+.disconnect-btn{background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;letter-spacing:1px;font-family:'Share Tech Mono',monospace;}
+.disconnect-btn:hover{color:#f87171;}
+.progress-wrap{margin-bottom:20px;}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;}
+.progress-track{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--void),var(--azure),var(--gold));transition:width 0.5s ease;}
+.traits{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:48px;}
+.trait-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:16px;}
+.trait-name{font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;}
+.trait-vals{display:flex;flex-wrap:wrap;gap:4px;}
+.trait-pill{font-size:9px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,0.05);border:0.5px solid var(--border);color:var(--muted);letter-spacing:1px;}
+.rarity-section{margin-bottom:48px;}
+.section-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
+.rarity-bars{display:flex;flex-direction:column;gap:10px;}
+.rarity-row{display:flex;align-items:center;gap:12px;}
+.rarity-label{font-size:11px;color:var(--muted);width:90px;letter-spacing:1px;}
+.rarity-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;}
+.rarity-bar{height:100%;border-radius:3px;}
+.rarity-count{font-size:11px;color:var(--muted);width:60px;text-align:right;}
+footer{border-top:0.5px solid var(--border);padding:32px 0;text-align:center;font-size:11px;color:var(--muted);letter-spacing:2px;}
+footer a{color:var(--azure);text-decoration:none;}
+footer a:hover{color:var(--gold);}
+@media(max-width:600px){
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+  .traits{grid-template-columns:repeat(2,1fr);}
+  .preview-row .cube-preview:nth-child(n+4){display:none;}
+  .mint-card{padding:24px;}
+  .hero{padding:48px 0 40px;}
+  .wallet-grid{grid-template-columns:1fr;}
+  .wallet-btn-wc{grid-column:1;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="wrap">
+
+  <nav>
+    <div class="nav-logo">ISO CUBES</div>
+    <div class="nav-links">
+      <a href="https://etherscan.io/address/0x53eF64D600f3a6408D8dd6A5A3e38dbB2f8e0dE7" target="_blank">Contract</a>
+      <a href="https://opensea.io/collection/iso-cubes" target="_blank">OpenSea</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-eyebrow">1,111 Fully On-Chain · Ethereum</div>
+    <h1 class="hero-title">ISO<br>CUBES</h1>
+    <p class="hero-sub">Generative isometric cube sculptures. Every piece unique. Art and metadata stored entirely on the Ethereum blockchain. Forever.</p>
+  </div>
+
+  <div class="preview-row" id="preview-row"></div>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-val" id="stat-minted">—</span><span class="stat-key">Minted</span></div>
+    <div class="stat"><span class="stat-val">1,111</span><span class="stat-key">Supply</span></div>
+    <div class="stat"><span class="stat-val">0.0001</span><span class="stat-key">Price ETH</span></div>
+    <div class="stat"><span class="stat-val">5%</span><span class="stat-key">Royalty</span></div>
+  </div>
+
+  <div class="mint-card">
+    <div class="mint-card-title">Mint your piece</div>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="prog-text">— / 1,111 minted</span>
+        <span id="prog-pct">—%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="wallet-info" id="wallet-info">
+      <span>Connected: <span class="wallet-addr" id="wallet-addr"></span></span>
+      <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div class="qty-row">
+      <span class="qty-label">Quantity (max 5)</span>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <input class="qty-num" id="qty" type="number" value="1" min="1" max="5" readonly/>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="price-row">
+      <span class="price-label">Total Cost</span>
+      <div>
+        <div class="price-val" id="price-display">0.0001 ETH</div>
+        <div class="price-usd" id="price-usd">≈ $—</div>
+      </div>
+    </div>
+
+    <!-- Wallet connect buttons (shown when not connected) -->
+    <div id="wallet-buttons">
+      <div class="wallet-grid">
+        <button class="wallet-btn wallet-btn-wc" onclick="connectWalletConnect()">
+          <img src="https://avatars.githubusercontent.com/u/37784886" alt="WalletConnect"/>
+          WalletConnect — Mobile &amp; All Wallets
+        </button>
+        <button class="wallet-btn" onclick="connectInjected('metamask')">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask"/>
+          MetaMask
+        </button>
+        <button class="wallet-btn" onclick="connectInjected('okx')">
+          <img src="https://www.okx.com/cdn/assets/imgs/226/BEF0B5A31B766AA0.png" alt="OKX"/>
+          OKX Wallet
+        </button>
+        <button class="wallet-btn" onclick="connectInjected('rabby')">
+          <img src="https://rabby.io/assets/images/logo-white.png" alt="Rabby" style="background:#7c3aed;border-radius:4px;padding:2px;"/>
+          Rabby
+        </button>
+      </div>
+    </div>
+
+    <!-- Mint button (shown when connected) -->
+    <button class="mint-btn" id="mint-btn" onclick="doMint()" style="display:none" disabled>MINT</button>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="section-title">Trait System</div>
+  <div class="traits">
+    <div class="trait-card">
+      <div class="trait-name">Palette</div>
+      <div class="trait-vals">
+        <span class="trait-pill">Azure</span><span class="trait-pill">Ember</span>
+        <span class="trait-pill">Venom</span><span class="trait-pill">Crimson</span>
+        <span class="trait-pill">Void</span><span class="trait-pill">Gold</span>
+        <span class="trait-pill">Glacier</span><span class="trait-pill">Magma</span>
+        <span class="trait-pill">Neon</span><span class="trait-pill">Dusk</span>
+        <span class="trait-pill">Lime</span><span class="trait-pill">Steel</span>
+      </div>
+    </div>
+    <div class="trait-card">
+      <div class="trait-name">Composition</div>
+      <div class="trait-vals">
+        <span class="trait-pill">Tower</span><span class="trait-pill">Trio</span>
+        <span class="trait-pill">Staircase</span><span class="trait-pill">Pyramid</span>
+        <span class="trait-pill">Cluster</span><span class="trait-pill">Monolith</span>
+        <span class="trait-pill">Duo</span><span class="trait-pill">Scatter</span>
+      </div>
+    </div>
+    <div class="trait-card">
+      <div class="trait-name">Rarity</div>
+      <div class="trait-vals">
+        <span class="trait-pill" style="color:#fde68a;border-color:rgba(253,230,138,0.3)">Legendary</span>
+        <span class="trait-pill" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">Epic</span>
+        <span class="trait-pill" style="color:#38bdf8;border-color:rgba(56,189,248,0.3)">Rare</span>
+        <span class="trait-pill">Uncommon</span>
+        <span class="trait-pill">Common</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rarity-section">
+    <div class="section-title">Rarity Distribution</div>
+    <div class="rarity-bars">
+      <div class="rarity-row"><span class="rarity-label" style="color:#fde68a">Legendary</span><div class="rarity-bar-wrap"><div class="rarity-bar" style="width:2.7%;background:#fde68a"></div></div><span class="rarity-count">30</span></div>
+      <div class="rarity-row"><span class="rarity-label" style="color:#a78bfa">Epic</span><div class="rarity-bar-wrap"><div class="rarity-bar" style="width:6.4%;background:#a78bfa"></div></div><span class="rarity-count">71</span></div>
+      <div class="rarity-row"><span class="rarity-label" style="color:#38bdf8">Rare</span><div class="rarity-bar-wrap"><div class="rarity-bar" style="width:16.2%;background:#38bdf8"></div></div><span class="rarity-count">180</span></div>
+      <div class="rarity-row"><span class="rarity-label">Uncommon</span><div class="rarity-bar-wrap"><div class="rarity-bar" style="width:27.9%;background:rgba(255,255,255,0.3)"></div></div><span class="rarity-count">310</span></div>
+      <div class="rarity-row"><span class="rarity-label">Common</span><div class="rarity-bar-wrap"><div class="rarity-bar" style="width:46.8%;background:rgba(255,255,255,0.15)"></div></div><span class="rarity-count">520</span></div>
+    </div>
+  </div>
+
+  <footer>
+    <p style="margin-bottom:8px">ISO CUBES · 1,111 On-Chain Generative NFTs · Ethereum</p>
+    <p>
+      <a href="https://etherscan.io/address/0x53eF64D600f3a6408D8dd6A5A3e38dbB2f8e0dE7" target="_blank">Etherscan</a>
+      &nbsp;·&nbsp;
+      <a href="https://opensea.io/collection/iso-cubes" target="_blank">OpenSea</a>
+    </p>
+  </footer>
+
+</div>
+
+<!-- WalletConnect Web3Modal + ethers -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script type="module">
+import { createWeb3Modal, defaultConfig } from 'https://esm.sh/@web3modal/ethers@4.1.9'
+
+// ── CONFIG ────────────────────────────────────────────────────
+const CONTRACT_ADDRESS = '0x53eF64D600f3a6408D8dd6A5A3e38dbB2f8e0dE7';
+const MINT_PRICE_ETH   = 0.0001;
+const MAX_SUPPLY       = 1111;
+// Get your own projectId free at https://cloud.walletconnect.com
+const WC_PROJECT_ID    = '44f02a8a99f99bfdfacac4d6841cd535';
+
+const ABI = [
+  'function mint(uint256 quantity) external payable',
+  'function totalSupply() external view returns (uint256)',
+  'function mintPrice() external view returns (uint256)',
+  'function saleActive() external view returns (bool)',
+  'function balanceOf(address owner) external view returns (uint256)',
+];
+
+const metadata = {
+  name: 'ISO Cubes',
+  description: '1,111 fully on-chain generative isometric cube sculptures',
+  url: window.location.origin,
+  icons: ['https://avatars.githubusercontent.com/u/37784886']
+};
+
+const ethersConfig = defaultConfig({
+  metadata,
+  enableEIP6963: true,   // detects MetaMask, Rabby, OKX, Coinbase etc automatically
+  enableInjected: true,
+  enableCoinbase: true,
+  rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/YEhNVCjlXDRL6H1WoAqDe',
+  defaultChainId: 1
+});
+
+const modal = createWeb3Modal({
+  ethersConfig,
+  chains: [{ chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io', rpcUrl: 'https://eth-mainnet.g.alchemy.com/v2/YEhNVCjlXDRL6H1WoAqDe' }],
+  projectId: WC_PROJECT_ID,
+  enableAnalytics: false,
+  themeMode: 'dark',
+  themeVariables: { '--w3m-accent': '#fde68a', '--w3m-background-color': '#030008' }
+});
+
+// ── STATE ─────────────────────────────────────────────────────
+let provider, signer, contract, walletAddress;
+let ethPrice = 2500;
+let qty = 1;
+
+// ── LIVE ETH PRICE ────────────────────────────────────────────
+async function fetchEthPrice(){
+  try{
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+    const d = await r.json();
+    ethPrice = d.ethereum.usd;
+    updatePriceDisplay();
+  }catch(e){}
+}
+function updatePriceDisplay(){
+  document.getElementById('price-display').textContent = (qty * MINT_PRICE_ETH).toFixed(4) + ' ETH';
+  document.getElementById('price-usd').textContent = '≈ $' + (qty * MINT_PRICE_ETH * ethPrice).toFixed(2);
+}
+fetchEthPrice();
+setInterval(fetchEthPrice, 60000);
+
+// ── ISO CUBE PREVIEWS ─────────────────────────────────────────
+const PALETTES = [
+  {bg:'#020b14',light:'#bae6fd',mid:'#0ea5e9',dark:'#0c4a6e',accent:'#e0f2fe'},
+  {bg:'#120500',light:'#fed7aa',mid:'#f97316',dark:'#7c2d12',accent:'#fef3c7'},
+  {bg:'#020d02',light:'#bbf7d0',mid:'#16a34a',dark:'#14532d',accent:'#dcfce7'},
+  {bg:'#0d0005',light:'#fecdd3',mid:'#f43f5e',dark:'#881337',accent:'#ffe4e6'},
+  {bg:'#030008',light:'#e9d5ff',mid:'#9333ea',dark:'#3b0764',accent:'#f3e8ff'},
+  {bg:'#080600',light:'#fde68a',mid:'#d97706',dark:'#78350f',accent:'#fef9c3'},
+];
+function isoTower(cx,cy,h,w,p){
+  let s=''; const ch=Math.round(w*1.1),hh=Math.round(w*0.57);
+  for(let lv=0;lv<h;lv++){
+    const by=cy-lv*ch, top=lv===h-1?p.accent:p.light;
+    s+=`<polygon points="${cx},${by-ch} ${cx+w},${by-ch+hh} ${cx},${by-ch+2*hh} ${cx-w},${by-ch+hh}" fill="${top}"/>`;
+    s+=`<polygon points="${cx+w},${by-ch+hh} ${cx+w},${by+hh} ${cx},${by+2*hh} ${cx},${by-ch+2*hh}" fill="${p.mid}"/>`;
+    s+=`<polygon points="${cx-w},${by-ch+hh} ${cx},${by-ch+2*hh} ${cx},${by+2*hh} ${cx-w},${by+2*hh}" fill="${p.dark}"/>`;
+  }
+  return s;
+}
+const row = document.getElementById('preview-row');
+for(let i=0;i<5;i++){
+  const p = PALETTES[i%PALETTES.length];
+  const w=18, cx=60, cy=95;
+  const h0=2+(i%3), h1=(i%4)+3, h2=2+(i%2);
+  const svg=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="${p.bg}" rx="6"/>${isoTower(cx-w*2,cy,h0,w,p)}${isoTower(cx,cy-Math.round(w*0.57),h1,w,p)}${isoTower(cx+w*2,cy,h2,w,p)}</svg>`;
+  const div=document.createElement('div'); div.className='cube-preview'; div.innerHTML=svg;
+  row.appendChild(div);
+}
+
+// ── ANIMATED BG ───────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d');
+  let W,H;
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+  const pts=Array.from({length:30},()=>({x:Math.random()*1400,y:Math.random()*800,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*2+0.5,c:['#0ea5e9','#9333ea','#fde68a','#f43f5e'][Math.floor(Math.random()*4)]}));
+  function draw(){ctx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill();});requestAnimationFrame(draw);}
+  draw();
+})();
+
+// ── QTY ───────────────────────────────────────────────────────
+window.changeQty = function(d){
+  qty=Math.max(1,Math.min(5,qty+d));
+  document.getElementById('qty').value=qty;
+  updatePriceDisplay();
+};
+
+// ── WALLET CONNECT METHODS ────────────────────────────────────
+window.connectWalletConnect = async function(){
+  modal.open();
+};
+
+// Detects the right injected wallet by name and connects directly
+window.connectInjected = async function(walletName){
+  // EIP-6963: collect all announced wallet providers
+  const providers = [];
+  window.addEventListener('eip6963:announceProvider', (e) => {
+    providers.push(e.detail);
+  }, { once: false });
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+
+  // Give providers 200ms to announce themselves
+  await new Promise(r => setTimeout(r, 200));
+
+  let targetProvider = null;
+
+  // Try EIP-6963 first — find by wallet name
+  if(providers.length > 0){
+    const name = walletName.toLowerCase();
+    const match = providers.find(p => {
+      const n = (p.info?.name || '').toLowerCase();
+      if(name === 'metamask') return n.includes('metamask') && !n.includes('flask');
+      if(name === 'okx')      return n.includes('okx');
+      if(name === 'rabby')    return n.includes('rabby');
+      return false;
+    });
+    if(match) targetProvider = match.provider;
+  }
+
+  // Fallback: check window-level providers
+  if(!targetProvider){
+    if(walletName === 'okx'     && window.okxwallet)          targetProvider = window.okxwallet;
+    if(walletName === 'rabby'   && window.rabby)               targetProvider = window.rabby;
+    if(walletName === 'metamask' && window.ethereum?.isMetaMask) targetProvider = window.ethereum;
+  }
+
+  // Last fallback: use whatever ethereum is available
+  if(!targetProvider && window.ethereum) targetProvider = window.ethereum;
+
+  if(!targetProvider){
+    showStatus(`${walletName.charAt(0).toUpperCase()+walletName.slice(1)} not detected. Please install it or use WalletConnect.`, 'error');
+    return;
+  }
+
+  try{
+    await connectWithProvider(targetProvider);
+  }catch(e){
+    showStatus(e.message || 'Connection failed', 'error');
+  }
+};
+
+async function connectWithProvider(ethereumProvider){
+  provider = new ethers.BrowserProvider(ethereumProvider);
+  await provider.send('eth_requestAccounts',[]);
+  const network = await provider.getNetwork();
+  if(network.chainId !== 1n){
+    try{ await ethereumProvider.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x1'}]}); }
+    catch(e){ showStatus('Please switch to Ethereum Mainnet','error'); return; }
+  }
+  signer = await provider.getSigner();
+  walletAddress = await signer.getAddress();
+  contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+  onConnected();
+}
+
+// Listen for Web3Modal connection
+modal.subscribeProvider(async ({ provider: wcProvider, address, isConnected }) => {
+  if(isConnected && wcProvider && address){
+    try{
+      provider = new ethers.BrowserProvider(wcProvider);
+      signer = await provider.getSigner();
+      walletAddress = await signer.getAddress();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      onConnected();
+    }catch(e){ console.log('WC connection error', e); }
+  }
+});
+
+function onConnected(){
+  document.getElementById('wallet-buttons').style.display='none';
+  document.getElementById('mint-btn').style.display='block';
+  document.getElementById('wallet-info').classList.add('show');
+  document.getElementById('wallet-addr').textContent = walletAddress.slice(0,6)+'...'+walletAddress.slice(-4);
+  refreshState();
+}
+
+window.disconnect = function(){
+  modal.disconnect();
+  provider=signer=contract=walletAddress=null;
+  document.getElementById('wallet-buttons').style.display='block';
+  document.getElementById('mint-btn').style.display='none';
+  document.getElementById('wallet-info').classList.remove('show');
+  document.getElementById('status').classList.remove('show');
+};
+
+// ── REFRESH STATE ─────────────────────────────────────────────
+async function refreshState(){
+  try{
+    const ro = new ethers.Contract(CONTRACT_ADDRESS, ABI, new ethers.JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/YEhNVCjlXDRL6H1WoAqDe'));
+    const [supply, active] = await Promise.all([ro.totalSupply(), ro.saleActive()]);
+    const minted = Number(supply);
+    const pct = Math.round(minted/MAX_SUPPLY*100);
+    document.getElementById('stat-minted').textContent = minted.toLocaleString();
+    document.getElementById('prog-text').textContent = minted+' / '+MAX_SUPPLY+' minted';
+    document.getElementById('prog-pct').textContent = pct+'%';
+    document.getElementById('prog-fill').style.width = pct+'%';
+    const btn = document.getElementById('mint-btn');
+    if(!active){ btn.textContent='SALE NOT ACTIVE'; btn.disabled=true; }
+    else if(minted>=MAX_SUPPLY){ btn.textContent='SOLD OUT'; btn.disabled=true; }
+    else{ btn.textContent='MINT'; btn.disabled=false; }
+  }catch(e){}
+}
+
+// ── MINT ──────────────────────────────────────────────────────
+window.doMint = async function(){
+  if(!contract){ showStatus('Please connect wallet first','error'); return; }
+  const btn = document.getElementById('mint-btn');
+  try{
+    btn.disabled=true; btn.classList.add('loading'); btn.textContent='Confirm in wallet...';
+    showStatus('Waiting for wallet confirmation...','pending');
+    const price = await contract.mintPrice();
+    const total = price * BigInt(qty);
+    const tx = await contract.mint(qty, {value: total});
+    btn.textContent='Minting...';
+    showStatus(`Transaction submitted! <a href="https://etherscan.io/tx/${tx.hash}" target="_blank">View on Etherscan ↗</a>`,'pending');
+    await tx.wait();
+    showStatus(`Successfully minted ${qty} ISO Cube${qty>1?'s':''} 🎉 &nbsp;<a href="https://opensea.io/${walletAddress}" target="_blank">View on OpenSea ↗</a>`,'success');
+    await refreshState();
+  }catch(e){
+    const msg = e?.reason || e?.message || 'Transaction failed';
+    showStatus(msg.length>120?msg.slice(0,120)+'...':msg,'error');
+  }finally{
+    btn.classList.remove('loading');
+    await refreshState();
+  }
+};
+
+function showStatus(msg, type){
+  const el = document.getElementById('status');
+  el.innerHTML = msg; el.className = 'status show '+type;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+refreshState();
+setInterval(refreshState, 15000);
+</script>
+</body>
+</html>
